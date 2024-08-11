@@ -32,13 +32,8 @@ export default async function AboutPage() {
           </p>
         </div>
         <p className="text-muted-foreground text-lg py-4">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
-          eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad
-          minim veniam, quis nostrud exercitation ullamco laboris nisi ut
-          aliquip ex ea commodo consequat. Duis aute irure dolor in
-          reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla
-          pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-          culpa qui officia deserunt mollit anim id est laborum
+          统计学硕士，TubeX 技术社区联合创始人，热衷于开发AI与区块链的各项应用，希望通过前言科技与这个世界有趣的灵魂进行交流。
+          如果你有任何技术问题，可以在下方的Email中与我联系。
         </p>
       </div>
     </div>
