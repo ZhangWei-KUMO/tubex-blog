@@ -3,6 +3,7 @@ import { Metadata } from "next";
 import { posts } from "#site/content";
 import { Tag } from "@/components/tag";
 export const runtime = 'edge';
+
 export const metadata: Metadata = {
   title: "Tags",
   description: "Topic I've written about",

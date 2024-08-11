@@ -6,6 +6,7 @@ import { getAllTags, getPostsByTagSlug, sortTagsByCount } from "@/lib/utils";
 import { slug } from "github-slugger";
 import { Metadata } from "next";
 export const runtime = 'edge';
+
 interface TagPageProps {
   params: {
     tag: string;

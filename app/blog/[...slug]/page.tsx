@@ -7,7 +7,8 @@ import "@/styles/mdx.css";
 import { Metadata } from "next";
 import { siteConfig } from "@/config/site";
 import { Tag } from "@/components/tag";
-export const runtime = 'edge';
+import { runtime } from "./runtimeConfig";
+
 interface PostPageProps {
   params: {
     slug: string[];
