@@ -1,4 +1,6 @@
-## NextJS 14, Tailwind, Shadcn UI, MDX and Velite Blog Template
+## TubeX Blog
+
+Based on NextJS 14, Tailwind, Shadcn UI, MDX and Velite Blog Template
 
 <p align="center">
  <img src="https://i.imgur.com/VgnktQH.png" width="400">
