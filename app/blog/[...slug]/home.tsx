@@ -1,4 +1,4 @@
-'use server';
+"use client";
 import { MDXContent } from "@/components/mdx-components";
 import "@/styles/mdx.css";
 import { Tag } from "@/components/tag";
@@ -14,8 +14,7 @@ interface PostPageProps {
   post: Post;
 }
 
-export default async function PostPage({post}:PostPageProps) {
- 
+export default function PostPage({post}:PostPageProps) {
   return (
     <article className="container py-6 prose dark:prose-invert max-w-3xl mx-auto">
       <h1 className="mb-2">{post.title}</h1>
