@@ -1,13 +1,12 @@
-'use server'
+
+import React from "react";
+import Layout from './home';
+import { siteConfig } from "@/config/site";
 import { posts } from "#site/content";
-import { MDXContent } from "@/components/mdx-components";
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import "@/styles/mdx.css";
-import { Metadata } from "next";
-import { siteConfig } from "@/config/site";
-import { Tag } from "@/components/tag";
-import { runtime } from "./runtimeConfig";
+export const runtime = 'edge';
 
 interface PostPageProps {
   params: {
@@ -52,41 +51,20 @@ export async function generateMetadata({
         },
       ],
     },
-    // twitter: {
-    //   card: "summary_large_image",
-    //   title: post.title,
-    //   description: post.description,
-    //   images: [`/api/og?${ogSearchParams.toString()}`],
-    // },
   };
 }
 
-export async function generateStaticParams(): Promise<
-  PostPageProps["params"][]
-> {
+export async function generateStaticParams(): Promise<PostPageProps["params"][]> {
   return posts.map((post) => ({ slug: post.slugAsParams.split("/") }));
 }
 
-export default async function PostPage({ params }: PostPageProps) {
+export default async function Page({ params }: PostPageProps) {
   const post = await getPostFromParams(params);
 
   if (!post || !post.published) {
     notFound();
   }
 
-  return (
-    <article className="container py-6 prose dark:prose-invert max-w-3xl mx-auto">
-      <h1 className="mb-2">{post.title}</h1>
-      <div className="flex gap-2 mb-2">
-        {post.tags?.map((tag) => (
-          <Tag tag={tag} key={tag} />
-        ))}
-      </div>
-      {post.description ? (
-        <p className="text-xl mt-0 text-muted-foreground">{post.description}</p>
-      ) : null}
-      <hr className="my-4" />
-      <MDXContent code={post.body} />
-    </article>
-  );
+  return <Layout post={post}/>
 }
+
