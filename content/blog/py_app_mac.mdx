@@ -1,0 +1,60 @@
+
+---
+title:如何将Python应用打包上传至Mac Store
+description: 本指南将指导您通过将 Python 应用程序上传到 Mac App Store 的过程。它基于我个人上传应用程序成功的挣扎经历。
+date: 2024-03-09
+tags: ["github"]
+published: true
+---
+> ⚠️ 注意：如果您认为自己已经很了解构建/代码签名的过程，可以跳到运行 PyInstaller 和代码签名部分，在那里您可以直接运行我的构建脚本来为 Mac App Store 打包您的应用程序。
+
+本指南将指导您通过将 Python 应用程序上传到 Mac App Store 的过程。它基于我个人上传应用程序成功的挣扎经历。人们可能会认为将 Python 应用程序上传到 Mac App Store 是一件容易的事。毕竟，Python 是世界上最流行的语言之一，macOS 是最流行的操作系统之一。然而，应用程序沙盒化和应用程序签名过程的复杂性使这种尝试变得困难。为了使应用程序能够正确运行并被 Mac App Store 接受，指定正确的构建参数和权限至关重要。互联网上解释如何做到这一点的许多指南都已过时，自从它们编写以来，部署 Python 应用程序的过程已经发生了重大变化。本指南旨在提供大致最新和准确的信息，截至2022年10月，使用现代工具和库（例如 Python 3.9、PyInstaller、PySide6）。
+本指南的目标是至少允许您使用 Transporter 将 Python 应用程序上传到 Mac App Store。然而，仅仅因为应用程序通过 Transporter 成功上传，并不意味着它会被苹果接受。本指南不会涵盖让您的应用程序获得苹果接受的过程，那是另一回事。最后，我们将上传到 App Store 的应用程序将是一个简单的 Python 应用程序，在 UI 窗口中显示“Hello World”。这个应用程序旨在作为您用来构建自己的应用程序的基石，因此，我保持了它极其基础和简单。
+# 前期准备
+您必须拥有一个 Mac 开发者账号。这是一个付费账户，您必须支付年费以保持其活跃状态。您应该在 App Store Connect 配置文件中注册了一个应用程序。您可以在此处找到一个链接：[https://appstoreconnect.apple.com/apps](https://appstoreconnect.apple.com/apps)。如果您还没有注册应用程序，您可以通过点击页面右上角的“添加应用”按钮来创建一个，并设置应用程序。
+一旦您在 App Store Connect 配置文件中注册了一个应用程序，您应该有一个包 ID（bundle ID）。这是您应用程序的唯一标识符，用于在 App Store 中识别您的应用程序。您可以通过点击 App Store Connect 配置文件中的您的应用程序，然后点击“常规”标签来找到您的包 ID。包 ID 列在“应用信息”部分下。我们将在指南的后面部分使用这个包 ID。
+# 库和工具
+MacOS（显而易见）- 请注意，我使用的是我的个人M1 Mac（macOS Monterey），它使用的是带有ARM64架构的芯片。如果您使用的是基于Intel的Mac，您可能需要稍微更改Pyinstaller规格文件，以使用Intel架构而不是ARM64。我没有测试过这个，所以不能保证它会工作，但这应该是可能的。
+XCode 命令行工具 - 您可以通过在终端运行 `xcode-select --install `来安装它们。
+Python 3.9 - 我使用的是编译为在ARM64上运行的Python，因为我使用的是M1 Mac，但您可能可以使用为Intel的x86_64架构编译的Python。同样，我没有测试过这个，所以请注意那里可能的复杂性。
+Pyside6 - 您可以通过在该项目目录的终端中运行 `pip install -r requirements.txt `来安装它。
+PyInstaller - 您也可以通过在该项目目录的终端中运行` pip install -r requirements.txt `来安装它。
+# 本地运行
+`main.py` 文件包含了一个简单的Python应用程序，它在一个UI窗口中显示“Hello World”。克隆这个仓库，并确保使用 `pip install -r requirements.txt` 在终端中安装项目需求。然后，你可以通过运行 `python main.py`来运行应用程序，你应该会看到一个弹出的窗口中写着“Hello World”。
+它应该看起来像这样：
+# 打包App
+## Pyinstaller .spec文件
+打包应用的第一步是创建一个Pyinstaller .spec文件。这个文件包含了关于Pyinstaller应该如何打包应用的信息。你可以在这个仓库中找到.spec文件（命名为main.spec）。
+获取这个文件内容的正确性相当棘手，我不得不进行大量的尝试和错误才能使其工作。你应该在很大程度上能够将其作为自己应用的模板。然而，关于这个文件你应该知道几件事：
+
+- 包标识符是你应该更改以匹配你应用的包标识符的。你可以通过设置.spec文件的plist字典部分下的CFBundleIdentifier键的值来设置它。
+- 添加的文件部分是你应该添加任何你的应用需要运行的文件的地方。
+- 应用类别是你应该更改以匹配你应用类别的。类别值在.spec文件的plist字典部分的LSApplicationCategoryType键下。
+- 如果你偏离我创建的默认.spec文件，请非常小心你更改的内容。我发现某些键/值如果设置不正确会导致应用崩溃。例如，如果你将`console=False`更改为`console=True`，在你对应用进行代码签名之后尝试打开它，应用将会崩溃。
+## Entitlements .plist文件
+下一步是创建一个`entitlements.plist`文件。这个文件包含了关于应用权利的信息。权利基本上是应用运行所需的权限。你可以在这个仓库中找到.plist文件（命名为entitlements.plist）。你应该在很大程度上可以直接使用这个文件。
+
+## 配置文件
+你还需要创建一个配置文件。这是一个包含信息的文件，将开发者和设备唯一地绑定到一个授权的开发团队，并使设备能够用于测试，并用于对应用进行签名。你可以通过访问苹果开发者网站的“证书、标识符和配置文件”部分：https://developer.apple.com/account/resources/profiles/list来创建配置文件。然后，点击左侧边栏中的“配置文件”，然后点击“+”按钮。然后，选择“Mac App Store”作为配置文件的类型，并选择你应用的包ID。接着，点击“继续”，然后“生成”。这将为你的应用创建一个配置文件。你可以通过点击页面右上角的“下载”按钮来下载它。
+
+## 创建图标
+下一步是为你的应用创建一个图标。你可以使用任何图像编辑器来创建一个图标。然而，图标必须是.icns格式。你可以使用iconutil命令将图像转换为.icns格式。有关如何做到这一点的更多细节，请参见这个gist：[https://gist.github.com/jamieweavis/b4c394607641e1280d447deed5fc85fc](https://gist.github.com/jamieweavis/b4c394607641e1280d447deed5fc85fc)
+## 运行Pyinstaller和代码签名
+我创建了一个名为build.py的python脚本，将运行Pyinstaller和给应用程序代码签名。.spec文件当前假设图标名为icon.icns，入口点命名为main.py。它还假设没有添加文件，但对于一个真正的应用，你可能需要添加一些文件。如果你想使用不同的名称，你可以在.spec文件中更改这些值，但我可能会在将来向build.py脚本添加命令行参数，以使这更容易。你将需要两个证书来运行这个脚本：第三方Mac开发者应用证书和第三方Mac开发者安装证书。你可以通过访问这里的“证书、标识符和配置文件”部分找到这些证书：
+```python
+python build.py \
+    --app_name "Testapp" \
+    --version "0.0.1" \
+    --spec_file "main.spec" \
+    --entitlements "entitlements.plist" \
+    --provisioning_profile "testapp_provision.provisionprofile" \
+    --app_certificate "3rd Party Mac Developer Application: John Smith (L42TK32G7A)" \
+    --installer_certificate "3rd Party Mac Developer Installer: John Smith (L42TK32G7A)" \
+    --output_dir "dist"
+```
+
+---
+
+参考资料：
+
+1. [Python App Mac App Store](https://github.com/nyavramov/python_app_mac_app_store)（有效截止日：2022年10月）

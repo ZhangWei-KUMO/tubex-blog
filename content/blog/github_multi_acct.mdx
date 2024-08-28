@@ -1,0 +1,67 @@
+
+---
+title: Github的多账户配置
+description: 在实际的开发过程中，由于业务场景的不同很多程序员会使用到多个github账户。
+date: 2024-03-09
+tags: ["github"]
+published: true
+---
+
+在实际的开发过程中，由于业务场景的不同很多程序员会使用到多个github账户。
+同时，也面临着多个ssh key的管理问题，本文将带大家如何进行Github的多账户配置。
+
+# 清理全局配置
+
+我们首先清理已有配置，防止生成密钥的时候与全局用户名和邮箱有绑定。
+
+```bash
+git config --list
+git config --global --unset user.name
+git config --global --unset user.email
+```
+
+# SSH Key的生成
+
+在单一模型下，通常通过`ssh-keygen -t rsa -C "邮箱名称"`的方式生成id_rsa密钥。但是在多账户模式下，我们则需要将密钥进行区别生成：
+```bash
+ssh-keygen -t rsa -f ~/.ssh/id_rsa_personal -C "邮箱名称1"
+ssh-keygen -t rsa -f ~/.ssh/id_rsa_company -C "邮箱名称2"
+
+# 分别添加到ssh-agent信任列表
+ssh-add ~/.ssh/id_rsa_personal
+ssh-add ~/.ssh/id_rsa_company
+
+# 打开公钥内容,复制粘贴至github中
+cat ~/.ssh/id_rsa_personal.pub 
+cat ~/.ssh/id_rsa_company.pub 
+```
+
+# config文件编写
+执行 `vim ~/.ssh/config` 。
+```bash
+# 个人账户
+Host ZhangWei-KUMO.github.com
+Hostname github.com
+IdentityFile ~/.ssh/id_rsa_personal
+User ZhangWei-KUMO
+  
+# 公司账户
+Host [您的Github用户名].github.com
+Hostname github.com
+IdentityFile ~/.ssh/id_rsa_company
+User [您的Github用户名]
+```
+
+# 测试
+```bash
+ssh -T git@[您的Github用户名].github.com
+ssh -T git@ZhangWei-KUMO.github.com
+```
+如果返回`Hi [用户名].You've successfully authenticated, but GitHub does not provide shell access.`则表示已经配置成功。如果二者返回的用户名不相同则表示成功。
+
+# 修改远程URL
+在默认情况下GitHub仓库URL是`git@github.com:username/repo.git`。我们需要换成我们在在远程git clone代码的时候也要注意需要在github.com之前加上前缀, 如：
+```bash
+git@zhangwei.github.com:username/repo.git
+```
+
