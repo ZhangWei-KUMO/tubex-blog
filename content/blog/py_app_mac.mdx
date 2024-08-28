@@ -1,11 +1,11 @@
-
 ---
-title:如何将Python应用打包上传至Mac Store
+title: 如何将Python应用打包上传至MacStore
 description: 本指南将指导您通过将 Python 应用程序上传到 Mac App Store 的过程。它基于我个人上传应用程序成功的挣扎经历。
 date: 2024-03-09
-tags: ["github"]
+tags: ["python"]
 published: true
 ---
+
 > ⚠️ 注意：如果您认为自己已经很了解构建/代码签名的过程，可以跳到运行 PyInstaller 和代码签名部分，在那里您可以直接运行我的构建脚本来为 Mac App Store 打包您的应用程序。
 
 本指南将指导您通过将 Python 应用程序上传到 Mac App Store 的过程。它基于我个人上传应用程序成功的挣扎经历。人们可能会认为将 Python 应用程序上传到 Mac App Store 是一件容易的事。毕竟，Python 是世界上最流行的语言之一，macOS 是最流行的操作系统之一。然而，应用程序沙盒化和应用程序签名过程的复杂性使这种尝试变得困难。为了使应用程序能够正确运行并被 Mac App Store 接受，指定正确的构建参数和权限至关重要。互联网上解释如何做到这一点的许多指南都已过时，自从它们编写以来，部署 Python 应用程序的过程已经发生了重大变化。本指南旨在提供大致最新和准确的信息，截至2022年10月，使用现代工具和库（例如 Python 3.9、PyInstaller、PySide6）。
@@ -41,6 +41,7 @@ PyInstaller - 您也可以通过在该项目目录的终端中运行` pip instal
 下一步是为你的应用创建一个图标。你可以使用任何图像编辑器来创建一个图标。然而，图标必须是.icns格式。你可以使用iconutil命令将图像转换为.icns格式。有关如何做到这一点的更多细节，请参见这个gist：[https://gist.github.com/jamieweavis/b4c394607641e1280d447deed5fc85fc](https://gist.github.com/jamieweavis/b4c394607641e1280d447deed5fc85fc)
 ## 运行Pyinstaller和代码签名
 我创建了一个名为build.py的python脚本，将运行Pyinstaller和给应用程序代码签名。.spec文件当前假设图标名为icon.icns，入口点命名为main.py。它还假设没有添加文件，但对于一个真正的应用，你可能需要添加一些文件。如果你想使用不同的名称，你可以在.spec文件中更改这些值，但我可能会在将来向build.py脚本添加命令行参数，以使这更容易。你将需要两个证书来运行这个脚本：第三方Mac开发者应用证书和第三方Mac开发者安装证书。你可以通过访问这里的“证书、标识符和配置文件”部分找到这些证书：
+
 ```python
 python build.py \
     --app_name "Testapp" \
