@@ -1,0 +1,116 @@
+
+---
+title: 在CloudFlare Workers上部署FastAPI应用
+description:  从了解Python如何在Workers上运行的机制到成功部署一个API应用
+date: 2024-03-10
+tags: ["python", "ai"]
+published: true
+---
+
+<Callout type="warning">注意：本项目读者需要具有Python编程的基础知识和对CloudFlare有一定的使用经验</Callout>
+
+不同于完全支持TS和JS，CloudFlare Workers对Python的支持还处于beta版环节。目前的支持如下：
+1. 大多数 Python 标准库
+2. CloudFlare服务绑定，包括 Workers AI、Vectorize、R2、KV、D1、队列、持久对象、服务绑定等.
+3. 环境变量和密钥支持
+
+<Callout type="warning">Python Workers 处于公测阶段。
+目前您只能在本地开发中使用内置包。即将支持使用`requirements.txt` 文件部署包。
+您必须将 `python_workers` 兼容性标志添加到您的 Worker</Callout>
+
+```py
+from js import Response, Headers, fetch
+
+async def on_fetch(request):
+    endpoint = "https://api.waqi.info/feed/geo:"
+    token = "" # Use a token from https://aqicn.org/api/
+    html_style = "body{padding:6em; font-family: sans-serif;} h1{color:#f6821f}"
+    html_content = "<h1>Weather 🌦</h1>"
+
+    latitude = request.cf.latitude
+    longitude = request.cf.longitude
+
+    endpoint += f"{latitude};{longitude}/?token={token}"
+    response = await fetch(endpoint)
+    content = await response.json()
+
+    html_content += "<p>This is a demo using Workers geolocation data. </p>"
+    html_content += f"You are located at: {latitude},{longitude}.</p>"
+    html_content += f"<p>Based off sensor data from <a href='{content.data.city.url}'>{content.data.city.name}</a>:</p>"
+    html_content += f"<p>The AQI level is: {content.data.aqi}.</p>"
+    html_content += f"<p>The N02 level is: {content.data.iaqi.no2.v}.</p>"
+    html_content += f"<p>The O3 level is: {content.data.iaqi.o3.v}.</p>"
+    html_content += f"<p>The temperature is: {content.data.iaqi.t.v}°C.</p>"
+
+    html = f"""
+    <!DOCTYPE html>
+      <head>
+        <title>Geolocation: Weather</title>
+      </head>
+      <body>
+        <style>{html_style}</style>
+        <div id="container">
+        {html_content}
+        </div>
+      </body>
+    """
+
+    headers = Headers.new({"content-type": "text/html;charset=UTF-8"}.items())
+    return Response.new(html, headers=headers)
+```
+
+## FastAPI
+
+```py
+from fastapi import FastAPI, Request
+from pydantic import BaseModel
+
+
+async def on_fetch(request, env):
+    import asgi
+
+    return await asgi.fetch(app, request, env)
+
+
+app = FastAPI()
+
+
+@app.get("/")
+async def root():
+    return {"message": "Hello, World!"}
+
+
+@app.get("/env")
+async def env(req: Request):
+    env = req.scope["env"]
+    return {
+        "message": "Here is an example of getting an environment variable: "
+        + env.MESSAGE
+    }
+
+
+class Item(BaseModel):
+    name: str
+    description: str | None = None
+    price: float
+    tax: float | None = None
+
+
+@app.post("/items/")
+async def create_item(item: Item):
+    return item
+
+
+@app.put("/items/{item_id}")
+async def update_item(item_id: int, item: Item, q: str | None = None):
+    result = {"item_id": item_id, **item.model_dump()}
+    if q:
+        result.update({"q": q})
+    return result
+
+
+@app.get("/items/{item_id}")
+async def read_item(item_id: int):
+    return {"item_id": item_id}
+```
+

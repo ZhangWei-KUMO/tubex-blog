@@ -1,0 +1,142 @@
+
+
+---
+title: D1数据库的使用
+description: 在CloudFlare上快速部署一个无服务器数据库
+date: 2024-03-09
+tags: ["cloud", "python"]
+published: true
+---
+
+本指南将指导您完成以下操作：
+* 使用 Cloudflare 的本机无服务器 SQL 数据库 D1 创建您的第一个数据库。
+* 创建架构并通过命令行查询数据库。
+* 将 Cloudflare Worker 连接到 D1 数据库以编程方式查询您的 D1 数据库
+
+## 1. 创建一个Worker
+
+我们将创建一个新的Worker，可以直接对你的数据库发起query请求。假设项目名称为`d1-tutorial`:
+
+```bash
+CI=true cnpm create cloudflare@latest -- d1-tutorial
+```
+
+在项目文件夹中，你会看到如下文件：
+* `src/index.ts`文件中一个叫Hello World的 Worker；
+* `wrangler.toml`文件，其中包含了你的Cloudflare账户信息。
+
+## 2. 创建数据库
+
+D1 数据库在概念上与许多其他数据库类似：数据库可能包含一个或多个表、查询这些表的能力以及可选索引。 D1 使用熟悉的 SQL 查询语言（由 SQLite 使用）。
+要创建您的第一个 D1 数据库，请切换到您刚刚为 Workers 项目创建的目录：
+
+运行以下 `wrangler d1` 命令并为您的数据库命名。在本教程中，数据库将命名为 `prod-d1-tutorial`:
+
+```bash
+# 这个过程需要在科学上网环境下
+npx wrangler d1 create prod-d1-tutorial
+```
+
+此时会弹出CloudFlare的UI界面，让用户点击授权，授权完成后会在终端显示如下信息：
+```bash
+✅ Successfully created DB 'prod-d1-tutorial' in region APAC
+Created your new D1 database.
+
+[[d1_databases]]
+binding = "DB" # i.e. available in your Worker on env.DB
+database_name = "prod-d1-tutorial"
+database_id = "**********"
+```
+
+## 3. 将Worker绑定到你的D1数据库上
+
+将终端生成的信息加入到`wrangler.toml`文件中,
+
+## 4. 查询数据库
+
+在项目根目录下创建一个`schema.sql`文件，用于创建数据库表：
+
+```sql
+DROP TABLE IF EXISTS Customers;
+CREATE TABLE IF NOT EXISTS Customers (CustomerId INTEGER PRIMARY KEY, CompanyName TEXT, ContactName TEXT);
+INSERT INTO Customers (CustomerID, CompanyName, ContactName) VALUES (1, 'Alfreds Futterkiste', 'Maria Anders'), (4, 'Around the Horn', 'Thomas Hardy'), (11, 'Bs Beverages', 'Victoria Ashworth'), (13, 'Bs Beverages', 'Random Name');
+```
+
+您将初始化数据库以首先在本地运行和测试。通过运行以下命令引导新的 D1 数据库：
+
+```bash
+$ npx wrangler d1 execute prod-d1-tutorial --local --file=./schema.sql
+```
+
+然后通过运行以下命令验证您的数据是否在数据库中：
+
+```bash
+$ npx wrangler d1 execute prod-d1-tutorial --local --command="SELECT * FROM Customers"
+```
+
+
+## 5. 本地开发上使用wrangler
+
+替换`src/index.ts`文件中的内容为：
+
+```typescript
+export interface Env {
+  DB: D1Database;
+}
+
+export default {
+  async fetch(request, env): Promise<Response> {
+    const { pathname } = new URL(request.url);
+
+    if (pathname === "/api/beverages") {
+      // If you did not use `DB` as your binding name, change it here
+      const { results } = await env.DB.prepare(
+        "SELECT * FROM Customers WHERE CompanyName = ?"
+      )
+        .bind("Bs Beverages")
+        .all();
+      return Response.json(results);
+    }
+
+    return new Response(
+      "Call /api/beverages to see everyone who works at Bs Beverages"
+    );
+  },
+} satisfies ExportedHandler<Env>;
+```
+
+```bash
+$ npx wrangler dev
+```
+
+## 6. 部署数据库
+
+要将 Worker 部署到生产环境，您必须首先重复数据库引导步骤，而不使用 `--local` 标志来读取 Worker 数据。这将创建数据库表并将数据导入到在 Cloudflare 的全球网络上运行的数据库的生产版本中。
+首先，使用您在步骤 4 中创建的 `schema.sql` 文件引导数据库：
+
+```bash
+$ npx wrangler d1 execute prod-d1-tutorial --remote --file=./schema.sql
+```
+
+然后通过运行以下命令验证数据是否在生产中：
+
+```bash
+```
+最后，部署您的 Worker 以使您的项目可以在 Internet 上访问。要部署您的 Worker，请运行：
+
+```bash
+```
+
+您现在可以访问新创建项目的 URL 来查询实时数据库。
+例如，如果新 Worker 的 URL 是 
+`d1-tutorial.<YOUR_SUBDOMAIN>.workers.dev，则访问 https://d1- Tutorial.<YOUR_SUBDOMAIN>.workers.dev/api/beverages`
+ 将向您的 Worker 发送一个请求，直接查询您的实时数据库。
+
+## 7. 删除数据库
+
+```bash
+$ npx wrangler d1 delete prod-d1-tutorial
+$ npx wrangler delete d1-tutorial
+```
+
+通过完成本教程，您已经创建了一个 D1 数据库、一个访问该数据库的 Worker 并在全球范围内部署了您的项目。

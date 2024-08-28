@@ -1,0 +1,40 @@
+
+
+---
+title: CloudFlare Workers
+description: 构建无服务器应用程序并在全球范围内立即部署。
+date: 2024-03-09
+tags: ["cloud", "python"]
+published: true
+---
+
+Cloudflare Workers 提供无服务器执行环境，允许您创建新应用程序或增强现有应用程序，而无需配置或维护基础设施。
+Cloudflare Workers 在 Cloudflare 的全球网络上运行。
+
+## 快速开始
+
+```bash
+npm create cloudflare
+```
+之后会有四个选项，我们选择第一个
+1. Hello World example
+2. Framework Starter
+3. Demo application
+4. Template from a Github repo
+然后在语音上我们选择python，之后本地文件夹下会生成一个项目文件夹，其中除了js依赖包外主要有如下两个文件：
+1. src/entry.py
+2. wrangler.toml
+
+
+
+```bash
+npm create cloudflare@latest <NEW_PROJECT_NAME> -- --template <GITHUB_REPO_URL>
+```
+NEW_PROJECT_NAME:将创建一个具有此名称的文件夹，其中包含您的新项目，并预先配置到您的 Workers 帐户。
+GITHUB_REPO_URL:这是 GitHub 存储库启动器的 URL
+
+#### Router 
+
+
+
+

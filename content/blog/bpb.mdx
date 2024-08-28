@@ -1,0 +1,46 @@
+
+---
+title: 如何使用CloudFlare创建免费4K专线
+description: 最近因为VPN总是出这样或是那样的问题，所以决定使用CloudFlare人类之光创建一条4K专线。
+date: 2024-03-09
+tags: ["梯子", "CloudFlare"]
+published: true
+---
+
+最近因为VPN总是出这样或是那样的问题，所以决定使用CloudFlare人类之光创建一条4K专线。
+
+# 准备工作
+
+1. CloudFlare账号
+2. BPB Worker Panel[开源项目](https://github.com/bia-pain-bache/BPB-Worker-Panel)；
+3. UUID[在线生成工具](https://1024tools.com/uuid/)；
+4. CloudFlare[ CDN IP](https://www.nslookup.io/domains/cdn.xn--b6gac.eu.org/dns-records/)(打开时需要关掉VPN);
+5. 下载好常见的梯子工具，如v2rayNG/v2rayU/Shadowrocket等
+
+## CloudFlare上部署BPB Worker Panel
+
+我们先去Github上下载BPB Worker Panel这个项目，它可以让我们快速在CloudFlare的Worker/pages上快速部署VPN代理服务。![图1 BPB-Worker-Panel项目界面](https://cdn.nlark.com/yuque/0/2024/png/21987809/1721972181029-09e8367c-9f5f-43cc-bfc1-f03bbf74f84a.png#averageHue=%23ed644d&clientId=ub2a7bc1b-6cce-4&from=drop&height=1186&id=uba2ae11c&originHeight=1186&originWidth=1882&originalType=binary&ratio=2&rotation=0&showTitle=true&size=309772&status=done&style=none&taskId=u50fae807-2543-4084-a2d7-2cf1b5d7204&title=%E5%9B%BE1%20BPB-Worker-Panel%E9%A1%B9%E7%9B%AE%E7%95%8C%E9%9D%A2&width=1882 "图1 BPB-Worker-Panel项目界面")
+将ZIP下载在本地之后，我们在CloudFlare的Workers and Pages中创建一个KV空间，这个空间用于存储应用数据的存储。后面我们会用到。
+
+![图2 KV存储空间创建页面](https://cdn.nlark.com/yuque/0/2024/png/21987809/1721972303066-c2cdd06d-9254-4524-a282-3ac172b075f3.png#averageHue=%23f9f9f9&clientId=ub2a7bc1b-6cce-4&from=drop&id=ud44b03d7&originHeight=485&originWidth=701&originalType=binary&ratio=2&rotation=0&showTitle=true&size=46656&status=done&style=none&taskId=u95f08656-5420-4719-9b4e-3a3ce14f303&title=%E5%9B%BE2%20KV%E5%AD%98%E5%82%A8%E7%A9%BA%E9%97%B4%E5%88%9B%E5%BB%BA%E9%A1%B5%E9%9D%A2 "图2 KV存储空间创建页面")
+然后回到主页我们在Pages中创建一个新项目，将刚才下载的BPB Worker Panel压缩包上传上去。部署一个初始化站点。
+![图3 创建应用界面](https://cdn.nlark.com/yuque/0/2024/png/21987809/1721972410419-f94ddcbe-e0d3-447b-8546-46257a66b951.png#averageHue=%23f3a15b&clientId=ub2a7bc1b-6cce-4&from=drop&id=u1ce351b4&originHeight=741&originWidth=1030&originalType=binary&ratio=2&rotation=0&showTitle=true&size=79035&status=done&style=none&taskId=ucdef2c2d-f136-4ba9-863a-bed61e5ac9e&title=%E5%9B%BE3%20%E5%88%9B%E5%BB%BA%E5%BA%94%E7%94%A8%E7%95%8C%E9%9D%A2 "图3 创建应用界面")![图4 项目部署界面](https://cdn.nlark.com/yuque/0/2024/png/21987809/1721972480598-6ef17e00-97f8-4b3c-a85d-1d1a7badfa1e.png#averageHue=%23fcfbfb&clientId=ub2a7bc1b-6cce-4&from=drop&id=u76fd9d44&originHeight=682&originWidth=1062&originalType=binary&ratio=2&rotation=0&showTitle=true&size=53537&status=done&style=none&taskId=u1ecf5113-f98f-4954-a9f2-90b95ed186e&title=%E5%9B%BE4%20%E9%A1%B9%E7%9B%AE%E9%83%A8%E7%BD%B2%E7%95%8C%E9%9D%A2 "图4 项目部署界面")
+创建成功后，我们将会有一个项目卡。
+![图5 项目卡展示界面](https://cdn.nlark.com/yuque/0/2024/png/21987809/1721972845549-075ac239-a914-407e-996d-8a9ed9e6c191.png#averageHue=%23f9f8f8&clientId=ub2a7bc1b-6cce-4&from=drop&id=uc5fee998&originHeight=459&originWidth=709&originalType=binary&ratio=2&rotation=0&showTitle=true&size=53219&status=done&style=none&taskId=u525b17ef-dc93-47f6-899b-0c66e5fd8cf&title=%E5%9B%BE5%20%E9%A1%B9%E7%9B%AE%E5%8D%A1%E5%B1%95%E7%A4%BA%E7%95%8C%E9%9D%A2 "图5 项目卡展示界面")
+这个时候我们开始给我们的项目配置环境变量和绑定KV空间。我们首先进入[nslookup.io网站](https://www.nslookup.io/domains/hongkongfp.com/dns-records/)中找到一个合适的cloudflare的代理IP，注意打开该网站时请关闭VPN。然后，我们去[这里](https://1024tools.com/uuid/)随机生成一个UUID。在设置项目中填入即可。
+![图6 环境变量设置页面](https://cdn.nlark.com/yuque/0/2024/png/21987809/1721973128819-5a50f082-5a2f-4157-a88e-c0a01ef591d1.png#averageHue=%23faf7f7&clientId=ub2a7bc1b-6cce-4&from=drop&id=u62088170&originHeight=530&originWidth=1090&originalType=binary&ratio=2&rotation=0&showTitle=true&size=61523&status=done&style=none&taskId=u40718795-afaf-4698-a9a8-baf9a0b37aa&title=%E5%9B%BE6%20%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E8%AE%BE%E7%BD%AE%E9%A1%B5%E9%9D%A2 "图6 环境变量设置页面")
+接着，我们将刚刚创建的KV空间绑定上去即可。
+![图7 KV空间绑定设置页面](https://cdn.nlark.com/yuque/0/2024/png/21987809/1721973403693-72f75692-5708-4d04-b26e-6fb3559843d7.png#averageHue=%23faf7f7&clientId=ub2a7bc1b-6cce-4&from=drop&id=u88a90b00&originHeight=530&originWidth=1090&originalType=binary&ratio=2&rotation=0&showTitle=true&size=64797&status=done&style=none&taskId=u19c81347-e080-4a01-b756-447c0eeba75&title=%E5%9B%BE7%20KV%E7%A9%BA%E9%97%B4%E7%BB%91%E5%AE%9A%E8%AE%BE%E7%BD%AE%E9%A1%B5%E9%9D%A2 "图7 KV空间绑定设置页面")
+这些变量的生效需要项目的重新部署，这步很简单，回到首页，将刚才的压缩包再次上传一遍即可生效。
+![截屏2024-07-26 13.57.33.png](https://cdn.nlark.com/yuque/0/2024/png/21987809/1721973522113-98d540e0-5b90-4728-947a-a84014f305fa.png#averageHue=%23faf9f9&clientId=ub2a7bc1b-6cce-4&from=drop&id=ub3097ef5&originHeight=530&originWidth=1090&originalType=binary&ratio=2&rotation=0&showTitle=false&size=65224&status=done&style=none&taskId=uaeffac78-d446-4858-80a9-d89b32fcb0a&title=)
+用不了一分钟，我们的项目就部署好了，之后CloudFlare会给你分配一个域名，如xxx.pages.dev。通常，这个域名在墙内是无法直接访问的。假设你已经在使用梯子。我们登录这个域名。首页打开后是一个speedtest的界面，它可以帮助我们测试我们本机当前各个节点的网速。我们暂时不用管它，我现介绍BPB Worker Panel这个主界面。
+
+## BPB Worker Panel的使用
+我们首先进入该域名的`/login`页面，初始密码为admin。登录之后会跳转到`/panel`界面中，首先第一步，拉到页面最底下点击`Change Password`修改密码。
+
+## ![截屏2024-07-26 14.07.20.png](https://cdn.nlark.com/yuque/0/2024/png/21987809/1721974044757-862239a3-6ac4-46a2-898b-4076af3a2d41.png#averageHue=%23f5f5f5&clientId=ub2a7bc1b-6cce-4&from=drop&height=279&id=u2b38c80a&originHeight=338&originWidth=468&originalType=binary&ratio=2&rotation=0&showTitle=false&size=25316&status=done&style=none&taskId=ud3892114-277c-4a4a-a740-193c1987822&title=&width=386)
+我们可以设置屏蔽广告和端口然后点击`Apply Settings`。![截屏2024-07-26 14.24.21.png](https://cdn.nlark.com/yuque/0/2024/png/21987809/1721975093896-6168a2c2-b0ce-41d6-a5e8-1033c68fc521.png#averageHue=%23ececec&clientId=ub2a7bc1b-6cce-4&from=drop&height=287&id=ubf10fcd8&originHeight=605&originWidth=1051&originalType=binary&ratio=2&rotation=0&showTitle=false&size=65176&status=done&style=none&taskId=uf07e5d5a-908b-4279-9c44-f90d8d25a9b&title=&width=498)
+接着我们看看这些设置是什么，如果您是小火箭的使用者则建议使用Normal Config，如果您是v2rayNG的使用者建议使用WARP。
+
+## 总结
+CloudFlare的Workers & Pages项目被称为人类之光。这个项目在WARP上支持的还较为有限。还有很大的进步空间。同时，开启CloudFlare加速器时也无法直接访问其网站。

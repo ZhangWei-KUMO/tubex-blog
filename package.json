@@ -33,6 +33,7 @@
     "vm2": "^3.9.19"
   },
   "devDependencies": {
+    "@sveltejs/adapter-cloudflare": "^4.7.2",
     "@tailwindcss/typography": "^0.5.10",
     "@types/node": "^20",
     "@types/react": "^18",
